@@ -3,7 +3,7 @@ name: Publish Railway web image
 on:
   push:
     branches:
-      - railway-web
+      - main
 
 permissions:
   contents: read
@@ -23,4 +23,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/kupdriveouter/wtdgl-web:railway
+          tags: ghcr.io/kupdriveouter/wtdgl-web-deploy:railway
