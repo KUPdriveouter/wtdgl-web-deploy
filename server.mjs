@@ -91,7 +91,8 @@ export function createRequestHandler({ publicRoot = defaultPublicRoot } = {}) {
     }
 
     try {
-      const pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname);
+      const requestUrl = new URL(request.url ?? '/', 'http://localhost');
+      const pathname = decodeURIComponent(requestUrl.pathname);
       const { filePath: requestedFilePath, relativeUrl } = resolvePublicPath(resolvedPublicRoot, pathname);
       const selected = await selectAsset(request, requestedFilePath, relativeUrl);
       if (!selected.info.isFile()) throw new Error('Not a file.');
@@ -124,9 +125,13 @@ export function createRequestHandler({ publicRoot = defaultPublicRoot } = {}) {
       const responseHeaders = {
         'content-type': mimeTypes.get(extname(requestedFilePath).toLowerCase()) ?? 'application/octet-stream',
         'content-length': contentLength,
-        'cache-control': relativeUrl === 'index.html' || /^Build[/\\]/.test(relativeUrl)
+        'cache-control': relativeUrl === 'index.html'
           ? 'no-cache'
-          : 'public, max-age=3600',
+          : /^Build[/\\]/.test(relativeUrl) && requestUrl.searchParams.has('v')
+            ? 'public, max-age=31536000, immutable'
+            : /^Build[/\\]/.test(relativeUrl)
+              ? 'no-cache'
+              : 'public, max-age=3600',
         etag,
         'x-content-type-options': 'nosniff',
         'referrer-policy': 'no-referrer'
