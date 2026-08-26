@@ -1,5 +1,5 @@
 # WTDGL Web Deployment
 
-Generated WebGL deployment artifacts for the public WTDGL web player. Game source code remains in the private development repository.
+Lightweight container host for the public WTDGL web player. Game source code and generated WebGL binaries remain outside this Git repository.
 
-The compressed Unity data file is stored as numbered parts to remain below GitHub's per-file limit. The Docker build concatenates those parts back into `WebGLSmoke.data.gz` before publishing the image.
+Publishing a temporary `wtdgl-webgl.zip` GitHub Release asset triggers the container workflow. It downloads the archive into `public/`, publishes `ghcr.io/kupdriveouter/wtdgl-web-deploy:railway`, then deletes the temporary release and tag. Generated WebGL files must never be committed here.

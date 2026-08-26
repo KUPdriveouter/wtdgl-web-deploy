@@ -1,12 +1,16 @@
 name: Publish Railway web image
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types:
+      - published
+
+concurrency:
+  group: publish-railway-web-image
+  cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -14,6 +18,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Download temporary WebGL release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release download "$RELEASE_TAG" --pattern wtdgl-webgl.zip --dir .artifact
+          mkdir public
+          unzip -q .artifact/wtdgl-webgl.zip -d public
+          test -f public/index.html
+          test -f public/Build/WebGLSmoke.data.gz
+          test -f public/Build/WebGLSmoke.framework.js.gz
+          test -f public/Build/WebGLSmoke.wasm.gz
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -24,3 +40,9 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/kupdriveouter/wtdgl-web-deploy:railway
+      - name: Remove temporary release artifact
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release delete "$RELEASE_TAG" --cleanup-tag --yes
